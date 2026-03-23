@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh-CN" data-bs-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,60 +7,81 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
     <style>
-        /* 自定义一点点样式让界面更好看 */
-        body { background-color: #f8f9fa; }
+        /* 自定义暗黑科幻主题细节 */
+        body { 
+            background-color: #0a0e17; /* 深空蓝黑背景 */
+            color: #c9d1d9; 
+        }
         #plot-container {
             width: 100%;
             height: 500px;
-            background-color: white;
+            /* 给图表外框加一点赛博朋克的青色发光效果 */
+            border: 1px solid #00f3ff;
+            box-shadow: 0 0 15px rgba(0, 243, 255, 0.15);
             border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #6c757d;
+            overflow: hidden;
+        }
+        .card { 
+            background-color: #121826; 
+            border: 1px solid #1f2937;
+        }
+        .card-header.bg-primary {
+            background-color: #0d1117 !important;
+            border-bottom: 1px solid #00f3ff;
+            color: #00f3ff !important;
+        }
+        .card-header.bg-light {
+            background-color: #0d1117 !important;
+            border-bottom: 1px solid #374151;
+            color: #e5e7eb !important;
         }
         .control-label {
             display: flex;
             justify-content: space-between;
             font-weight: bold;
+            color: #a5b4fc;
+        }
+        /* 滑块的强调色改为青色 */
+        input[type=range]::-webkit-slider-thumb {
+            background: #00f3ff;
+            box-shadow: 0 0 5px #00f3ff;
         }
         .result-box {
             font-size: 1.5rem;
             font-weight: bold;
-            color: #0d6efd;
+            color: #00f3ff;
+            text-shadow: 0 0 8px rgba(0, 243, 255, 0.4);
         }
+        .text-success { color: #39ff14 !important; text-shadow: 0 0 8px rgba(57, 255, 20, 0.4); } /* 荧光绿 */
+        .text-danger { color: #ff007f !important; text-shadow: 0 0 8px rgba(255, 0, 127, 0.4); } /* 霓虹粉 */
     </style>
 </head>
 <body>
 
 <div class="container py-4">
-    <header class="pb-3 mb-4 border-bottom">
-        <h1 class="display-6 fw-bold">量子隧穿效应 (Quantum Tunneling)</h1>
-        <p class="text-muted">调节右侧参数，观察波函数如何“穿透”经典物理中无法逾越的势垒。</p>
+    <header class="pb-3 mb-4 border-bottom border-secondary">
+        <h1 class="display-6 fw-bold" style="color: #e5e7eb;">量子隧穿效应 <span style="color: #00f3ff; font-size: 0.6em;">(Quantum Tunneling)</span></h1>
+        <p style="color: #8b949e;">调节右侧参数，观察波函数如何“穿透”经典物理中无法逾越的势垒。</p>
     </header>
 
     <div class="row align-items-start">
         <div class="col-lg-8 mb-4">
-            <div id="plot-container">
-                <p>图表加载中... (等待引入绘图库)</p>
-            </div>
+            <div id="plot-container"></div>
         </div>
 
         <div class="col-lg-4">
-            
             <div class="card mb-4 shadow-sm">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="my-0">实时数据</h5>
+                <div class="card-header bg-primary">
+                    <h5 class="my-0">实时数据监测</h5>
                 </div>
                 <div class="card-body text-center">
                     <div class="row">
-                        <div class="col-6 border-end">
-                            <h6 class="text-muted">透射率 (T)</h6>
+                        <div class="col-6 border-end border-secondary">
+                            <h6 style="color: #8b949e;">透射率 (T)</h6>
                             <div class="result-box" id="val-T">0.00%</div>
                         </div>
                         <div class="col-6">
-                            <h6 class="text-muted">反射率 (R)</h6>
+                            <h6 style="color: #8b949e;">反射率 (R)</h6>
                             <div class="result-box text-danger" id="val-R">100.00%</div>
                         </div>
                     </div>
@@ -69,10 +90,9 @@
 
             <div class="card shadow-sm">
                 <div class="card-header bg-light">
-                    <h5 class="my-0">物理参数调节</h5>
+                    <h5 class="my-0">物理参数控制台</h5>
                 </div>
                 <div class="card-body">
-                    
                     <div class="mb-3">
                         <div class="control-label">
                             <label for="slider-E" class="form-label">粒子能量 (E)</label>
@@ -80,7 +100,6 @@
                         </div>
                         <input type="range" class="form-range" id="slider-E" min="0.1" max="15" step="0.1" value="5">
                     </div>
-
                     <div class="mb-3">
                         <div class="control-label">
                             <label for="slider-V0" class="form-label">势垒高度 (V<sub>0</sub>)</label>
@@ -88,7 +107,6 @@
                         </div>
                         <input type="range" class="form-range" id="slider-V0" min="1" max="20" step="0.1" value="10">
                     </div>
-
                     <div class="mb-3">
                         <div class="control-label">
                             <label for="slider-a" class="form-label">势垒宽度 (a)</label>
@@ -96,225 +114,211 @@
                         </div>
                         <input type="range" class="form-range" id="slider-a" min="0.01" max="1" step="0.01" value="1">
                     </div>
-
                     <div class="mb-3">
                         <div class="control-label">
                             <label for="slider-m" class="form-label">粒子质量 (m)</label>
                             <span id="display-m">1 m<sub>e</sub></span>
                         </div>
                         <input type="range" class="form-range" id="slider-m" min="0.1" max="5" step="0.1" value="1">
-                        <small class="text-muted">注：以电子质量(m<sub>e</sub>)为单位</small>
+                        <small style="color: #8b949e;">注：以电子质量(m<sub>e</sub>)为单位</small>
                     </div>
-
                 </div>
             </div>
-
         </div>
     </div>
 
     <div class="row mt-4">
         <div class="col-12">
-            <div class="p-4 bg-light rounded-3">
+            <div class="p-4 bg-dark rounded-3">
                 <h4>现象解释</h4>
                 <p>在经典力学中，如果一个滚动的球（粒子）的能量 E 小于前方山坡的高度 V<sub>0</sub>，它绝对无法翻过山坡，会被 100% 弹回（反射）。</p>
                 <p>但在量子力学中，微观粒子具有波粒二象性。粒子的波函数在遇到势垒时不会立刻降为零，而是以指数形式衰减。如果势垒不够宽，波函数就有机会“漏”到势垒的另一边。这就是<strong>量子隧穿效应</strong>。你可以尝试降低势垒宽度或增加粒子能量，看看透射率 T 会如何急剧变化。</p>
             </div>
         </div>
     </div>
-
 </div>
 
 <script>
-// 1. 获取所有的 DOM 元素
-const sliderE = document.getElementById('slider-E');
-const sliderV0 = document.getElementById('slider-V0');
-const sliderA = document.getElementById('slider-a');
-const sliderM = document.getElementById('slider-m');
+    const sliderE = document.getElementById('slider-E');
+    const sliderV0 = document.getElementById('slider-V0');
+    const sliderA = document.getElementById('slider-a');
+    const sliderM = document.getElementById('slider-m');
 
-const displayE = document.getElementById('display-E');
-const displayV0 = document.getElementById('display-V0');
-const displayA = document.getElementById('display-a');
-const displayM = document.getElementById('display-m');
+    const displayE = document.getElementById('display-E');
+    const displayV0 = document.getElementById('display-V0');
+    const displayA = document.getElementById('display-a');
+    const displayM = document.getElementById('display-m');
 
-const valT = document.getElementById('val-T');
-const valR = document.getElementById('val-R');
+    const valT = document.getElementById('val-T');
+    const valR = document.getElementById('val-R');
 
-const K = 5.124; // 物理常数因子
+    const K = 5.124; 
 
-// --- 新增：微型复数运算库 ---
-const Complex = {
-    add: (a, b) => ({ re: a.re + b.re, im: a.im + b.im }),
-    sub: (a, b) => ({ re: a.re - b.re, im: a.im - b.im }),
-    mul: (a, b) => ({ re: a.re * b.re - a.im * b.im, im: a.re * b.im + a.im * b.re }),
-    div: (a, b) => {
-        const mag = b.re * b.re + b.im * b.im;
-        return { re: (a.re * b.re + a.im * b.im) / mag, im: (a.im * b.re - a.re * b.im) / mag };
-    },
-    // e^(re + i*im) = e^re * (cos(im) + i*sin(im))
-    exp: (re, im) => {
-        const e = Math.exp(re);
-        return { re: e * Math.cos(im), im: e * Math.sin(im) };
-    },
-    scale: (c, s) => ({ re: c.re * s, im: c.im * s })
-};
+    const Complex = {
+        add: (a, b) => ({ re: a.re + b.re, im: a.im + b.im }),
+        sub: (a, b) => ({ re: a.re - b.re, im: a.im - b.im }),
+        mul: (a, b) => ({ re: a.re * b.re - a.im * b.im, im: a.re * b.im + a.im * b.re }),
+        div: (a, b) => {
+            const mag = b.re * b.re + b.im * b.im;
+            return { re: (a.re * b.re + a.im * b.im) / mag, im: (a.im * b.re - a.re * b.im) / mag };
+        },
+        exp: (re, im) => {
+            const e = Math.exp(re);
+            return { re: e * Math.cos(im), im: e * Math.sin(im) };
+        },
+        scale: (c, s) => ({ re: c.re * s, im: c.im * s })
+    };
 
-// 2. 核心物理计算函数 (透射率 T)
-function calculateTransmission(E, V0, a, m) {
-    if (Math.abs(E - V0) < 0.001) {
-        const term = (m * V0 * Math.pow(a * K, 2)) / 4;
-        return 1 / (1 + term);
-    } 
-    if (E < V0) {
-        const kappa = K * Math.sqrt(m * (V0 - E));
-        const sinhTerm = Math.sinh(kappa * a);
-        const term = (Math.pow(V0, 2) * Math.pow(sinhTerm, 2)) / (4 * E * (V0 - E));
-        return 1 / (1 + term);
-    } else {
-        const k2 = K * Math.sqrt(m * (E - V0));
-        const sinTerm = Math.sin(k2 * a);
-        const term = (Math.pow(V0, 2) * Math.pow(sinTerm, 2)) / (4 * E * (E - V0));
-        return 1 / (1 + term);
-    }
-}
-
-// 3. 更新图表和数据的总函数
-function updatePlotAndData() {
-    const E = parseFloat(sliderE.value);
-    const V0 = parseFloat(sliderV0.value);
-    const a = parseFloat(sliderA.value);
-    const m = parseFloat(sliderM.value);
-
-    // 更新仪表盘
-    const T = calculateTransmission(E, V0, a, m);
-    const R = 1 - T;
-    valT.innerText = (T * 100).toFixed(4) + '%';
-    valR.innerText = (R * 100).toFixed(4) + '%';
-    valT.className = T < 0.0001 ? "result-box text-muted" : "result-box text-success";
-
-    // --- 新增：计算并生成波函数数据 ---
-    const xMin = -2;
-    const xMax = 5;
-    const step = 0.01;
-    const xWave = [];
-    const yWave = [];
-    
-    // 为了防止计算势垒内部系数时出现除零错误，我们对临界点做微小偏移
-    let calcE = E;
-    if (Math.abs(calcE - V0) < 0.001) calcE = V0 + 0.001;
-
-    const k1 = K * Math.sqrt(m * calcE);
-    let r, t, A, B, C_c, D_c, kappa, k2;
-
-    // 解析边界条件，求解复数波函数系数
-    if (calcE < V0) {
-        kappa = K * Math.sqrt(m * (V0 - calcE));
-        // 分母
-        const denom = { re: Math.cosh(kappa * a), im: ((k1*k1 - kappa*kappa) / (2 * k1 * kappa)) * Math.sinh(kappa * a) };
-        // 透射系数 t 与 反射系数 r
-        t = Complex.div(Complex.exp(0, -k1 * a), denom);
-        const num_r = { re: 0, im: -((k1*k1 + kappa*kappa) / (2 * k1 * kappa)) * Math.sinh(kappa * a) };
-        r = Complex.div(num_r, denom);
-        
-        // 势垒内系数 A 和 B
-        const t_phase = Complex.mul(t, Complex.exp(0, k1 * a));
-        A = Complex.mul(t_phase, { re: 0.5 * Math.exp(-kappa * a), im: 0.5 * Math.exp(-kappa * a) * (k1 / kappa) });
-        B = Complex.mul(t_phase, { re: 0.5 * Math.exp(kappa * a), im: -0.5 * Math.exp(kappa * a) * (k1 / kappa) });
-    } else {
-        k2 = K * Math.sqrt(m * (calcE - V0));
-        // 分母
-        const denom = { re: Math.cos(k2 * a), im: -((k1*k1 + k2*k2) / (2 * k1 * k2)) * Math.sin(k2 * a) };
-        t = Complex.div(Complex.exp(0, -k1 * a), denom);
-        const num_r = { re: 0, im: ((k1*k1 - k2*k2) / (2 * k1 * k2)) * Math.sin(k2 * a) };
-        r = Complex.div(num_r, denom);
-
-        // 势垒上方系数 C_c 和 D_c
-        const t_phase = Complex.mul(t, Complex.exp(0, k1 * a));
-        C_c = Complex.mul(t_phase, Complex.scale(Complex.exp(0, -k2 * a), 0.5 * (1 + k1 / k2)));
-        D_c = Complex.mul(t_phase, Complex.scale(Complex.exp(0, k2 * a), 0.5 * (1 - k1 / k2)));
-    }
-
-    const waveScale = 1.5; // 为了视觉效果，缩放波形的振幅
-
-    // 逐点计算波函数
-    for (let x = xMin; x <= xMax; x += step) {
-        xWave.push(x);
-        let psi = { re: 0, im: 0 };
-
-        if (x < 0) {
-            // 区域 I (左侧): 入射波 + 反射波 = 干涉
-            const inc = Complex.exp(0, k1 * x);
-            const ref = Complex.mul(r, Complex.exp(0, -k1 * x));
-            psi = Complex.add(inc, ref);
-        } else if (x <= a) {
-            // 区域 II (势垒内)
-            if (calcE < V0) {
-                const p1 = Complex.scale(A, Math.exp(kappa * x));
-                const p2 = Complex.scale(B, Math.exp(-kappa * x));
-                psi = Complex.add(p1, p2);
-            } else {
-                const p1 = Complex.mul(C_c, Complex.exp(0, k2 * x));
-                const p2 = Complex.mul(D_c, Complex.exp(0, -k2 * x));
-                psi = Complex.add(p1, p2);
-            }
+    function calculateTransmission(E, V0, a, m) {
+        if (Math.abs(E - V0) < 0.001) {
+            const term = (m * V0 * Math.pow(a * K, 2)) / 4;
+            return 1 / (1 + term);
+        } 
+        if (E < V0) {
+            const kappa = K * Math.sqrt(m * (V0 - E));
+            const sinhTerm = Math.sinh(kappa * a);
+            const term = (Math.pow(V0, 2) * Math.pow(sinhTerm, 2)) / (4 * E * (V0 - E));
+            return 1 / (1 + term);
         } else {
-            // 区域 III (右侧): 透射波
-            psi = Complex.mul(t, Complex.exp(0, k1 * x));
+            const k2 = K * Math.sqrt(m * (E - V0));
+            const sinTerm = Math.sin(k2 * a);
+            const term = (Math.pow(V0, 2) * Math.pow(sinTerm, 2)) / (4 * E * (E - V0));
+            return 1 / (1 + term);
+        }
+    }
+
+    function updatePlotAndData() {
+        const E = parseFloat(sliderE.value);
+        const V0 = parseFloat(sliderV0.value);
+        const a = parseFloat(sliderA.value);
+        const m = parseFloat(sliderM.value);
+
+        const T = calculateTransmission(E, V0, a, m);
+        const R = 1 - T;
+        
+        valT.innerText = (T * 100).toFixed(4) + '%';
+        valR.innerText = (R * 100).toFixed(4) + '%';
+        valT.className = T < 0.0001 ? "result-box" : "result-box text-success";
+        // 覆盖极小值颜色
+        if(T < 0.0001) valT.style.color = "#6b7280"; else valT.style.color = "";
+
+        const xMin = -2;
+        const xMax = 5;
+        const step = 0.01;
+        const xWave = [];
+        const yWave = [];
+        
+        let calcE = E;
+        if (Math.abs(calcE - V0) < 0.001) calcE = V0 + 0.001;
+
+        const k1 = K * Math.sqrt(m * calcE);
+        let r, t, A, B, C_c, D_c, kappa, k2;
+
+        if (calcE < V0) {
+            kappa = K * Math.sqrt(m * (V0 - calcE));
+            const denom = { re: Math.cosh(kappa * a), im: ((k1*k1 - kappa*kappa) / (2 * k1 * kappa)) * Math.sinh(kappa * a) };
+            t = Complex.div(Complex.exp(0, -k1 * a), denom);
+            const num_r = { re: 0, im: -((k1*k1 + kappa*kappa) / (2 * k1 * kappa)) * Math.sinh(kappa * a) };
+            r = Complex.div(num_r, denom);
+            const t_phase = Complex.mul(t, Complex.exp(0, k1 * a));
+            A = Complex.mul(t_phase, { re: 0.5 * Math.exp(-kappa * a), im: 0.5 * Math.exp(-kappa * a) * (k1 / kappa) });
+            B = Complex.mul(t_phase, { re: 0.5 * Math.exp(kappa * a), im: -0.5 * Math.exp(kappa * a) * (k1 / kappa) });
+        } else {
+            k2 = K * Math.sqrt(m * (calcE - V0));
+            const denom = { re: Math.cos(k2 * a), im: -((k1*k1 + k2*k2) / (2 * k1 * k2)) * Math.sin(k2 * a) };
+            t = Complex.div(Complex.exp(0, -k1 * a), denom);
+            const num_r = { re: 0, im: ((k1*k1 - k2*k2) / (2 * k1 * k2)) * Math.sin(k2 * a) };
+            r = Complex.div(num_r, denom);
+            const t_phase = Complex.mul(t, Complex.exp(0, k1 * a));
+            C_c = Complex.mul(t_phase, Complex.scale(Complex.exp(0, -k2 * a), 0.5 * (1 + k1 / k2)));
+            D_c = Complex.mul(t_phase, Complex.scale(Complex.exp(0, k2 * a), 0.5 * (1 - k1 / k2)));
         }
 
-        // 我们提取实部 (psi.re) 进行绘制，并叠加到能量线 E 上，使其居中震荡
-        yWave.push(E + waveScale * psi.re);
+        const waveScale = 1.5; 
+
+        for (let x = xMin; x <= xMax; x += step) {
+            xWave.push(x);
+            let psi = { re: 0, im: 0 };
+            if (x < 0) {
+                const inc = Complex.exp(0, k1 * x);
+                const ref = Complex.mul(r, Complex.exp(0, -k1 * x));
+                psi = Complex.add(inc, ref);
+            } else if (x <= a) {
+                if (calcE < V0) {
+                    psi = Complex.add(Complex.scale(A, Math.exp(kappa * x)), Complex.scale(B, Math.exp(-kappa * x)));
+                } else {
+                    psi = Complex.add(Complex.mul(C_c, Complex.exp(0, k2 * x)), Complex.mul(D_c, Complex.exp(0, -k2 * x)));
+                }
+            } else {
+                psi = Complex.mul(t, Complex.exp(0, k1 * x));
+            }
+            yWave.push(E + waveScale * psi.re);
+        }
+
+        const xBarrier = [xMin, 0, 0, a, a, xMax];
+        const yBarrier = [0, 0, V0, V0, 0, 0];
+
+        // 修改1：势垒颜色变为半透明青色发光
+        const traceBarrier = {
+            x: xBarrier, y: yBarrier, type: 'scatter', mode: 'lines',
+            name: '势垒 (V₀)', 
+            line: { color: '#00f3ff', width: 2 }, 
+            fill: 'tozeroy', 
+            fillcolor: 'rgba(0, 243, 255, 0.1)', 
+            hoverinfo: 'none'
+        };
+
+        // 修改2：能量线变为霓虹粉色
+        const traceEnergy = {
+            x: [xMin, xMax], y: [E, E], type: 'scatter', mode: 'lines',
+            name: '粒子能量 (E)', 
+            line: { color: '#ff007f', width: 2, dash: 'dash' },
+            hoverinfo: 'y+name'
+        };
+
+        // 修改3：波函数变为高亮荧光绿
+        const traceWave = {
+            x: xWave, y: yWave, type: 'scatter', mode: 'lines',
+            name: '波函数实部 Re(ψ)', 
+            line: { color: '#39ff14', width: 2.5 },
+            hoverinfo: 'none'
+        };
+
+        // 修改4：图表背景彻底暗黑化，调整网格线颜色
+        const layout = {
+            paper_bgcolor: 'rgba(0,0,0,0)', // 透明，继承外层容器颜色
+            plot_bgcolor: '#0a0e17',       // 绘图区深色背景
+            xaxis: { 
+                title: '位置 x (nm)', range: [xMin, xMax], zeroline: false,
+                gridcolor: 'rgba(255,255,255,0.05)', titlefont: { color: '#8b949e' }, tickfont: { color: '#8b949e' }
+            },
+            yaxis: { 
+                title: '能量与波幅 (eV)', range: [-2, 25], zeroline: true, zerolinecolor: 'rgba(255,255,255,0.1)',
+                gridcolor: 'rgba(255,255,255,0.05)', titlefont: { color: '#8b949e' }, tickfont: { color: '#8b949e' }
+            },
+            margin: { l: 60, r: 30, t: 30, b: 50 },
+            showlegend: true, 
+            legend: { x: 0.05, y: 0.95, font: { color: '#c9d1d9' }, bgcolor: 'rgba(10, 14, 23, 0.8)' }, 
+            hovermode: 'closest'
+        };
+
+        Plotly.react('plot-container', [traceBarrier, traceEnergy, traceWave], layout);
     }
 
-    // --- 绘图部分 ---
-    const xBarrier = [xMin, 0, 0, a, a, xMax];
-    const yBarrier = [0, 0, V0, V0, 0, 0];
+    function handleSliderChange() {
+        displayE.innerText = sliderE.value + ' eV';
+        displayV0.innerText = sliderV0.value + ' eV';
+        displayA.innerText = sliderA.value + ' nm';
+        displayM.innerText = sliderM.value + ' m_e';
+        updatePlotAndData();
+    }
 
-    const traceBarrier = {
-        x: xBarrier, y: yBarrier, type: 'scatter', mode: 'lines',
-        name: '势垒 (V₀)', line: { color: 'rgba(50, 50, 50, 0.8)', width: 2 },
-        fill: 'tozeroy', fillcolor: 'rgba(173, 216, 230, 0.5)', hoverinfo: 'none'
-    };
+    sliderE.addEventListener('input', handleSliderChange);
+    sliderV0.addEventListener('input', handleSliderChange);
+    sliderA.addEventListener('input', handleSliderChange);
+    sliderM.addEventListener('input', handleSliderChange);
 
-    const traceEnergy = {
-        x: [xMin, xMax], y: [E, E], type: 'scatter', mode: 'lines',
-        name: '粒子能量 (E)', line: { color: 'red', width: 2, dash: 'dash' },
-        hoverinfo: 'y+name'
-    };
-
-    // 新增：波函数曲线
-    const traceWave = {
-        x: xWave, y: yWave, type: 'scatter', mode: 'lines',
-        name: '波函数实部 Re(ψ)', line: { color: '#ff7f0e', width: 2.5 },
-        hoverinfo: 'none'
-    };
-
-    const layout = {
-        title: '一维方势垒与波函数实部 Re(ψ)',
-        xaxis: { title: '位置 x (nm)', range: [xMin, xMax], zeroline: false },
-        yaxis: { title: '能量与波幅 (eV)', range: [-2, 25], zeroline: true },
-        margin: { l: 60, r: 30, t: 50, b: 50 },
-        showlegend: true, legend: { x: 0.05, y: 0.95 }, hovermode: 'closest'
-    };
-
-    Plotly.react('plot-container', [traceBarrier, traceEnergy, traceWave], layout);
-}
-
-// 4. 监听事件并初始化
-function handleSliderChange() {
-    displayE.innerText = sliderE.value + ' eV';
-    displayV0.innerText = sliderV0.value + ' eV';
-    displayA.innerText = sliderA.value + ' nm';
-    displayM.innerText = sliderM.value + ' m_e';
     updatePlotAndData();
-}
-
-sliderE.addEventListener('input', handleSliderChange);
-sliderV0.addEventListener('input', handleSliderChange);
-sliderA.addEventListener('input', handleSliderChange);
-sliderM.addEventListener('input', handleSliderChange);
-
-updatePlotAndData();
 </script>
-
 </body>
 </html>
