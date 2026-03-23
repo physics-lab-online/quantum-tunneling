@@ -3,156 +3,179 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>一维量子隧穿效应可视化</title>
+    <title>一维量子隧穿效应动力学可视化</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
     <style>
-        /* 自定义暗黑科幻主题细节 */
-        body { 
-            background-color: #0a0e17; /* 深空蓝黑背景 */
-            color: #c9d1d9; 
-        }
+        body { background-color: #0a0e17; color: #c9d1d9; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
         #plot-container {
-            width: 100%;
-            height: 500px;
-            /* 给图表外框加一点赛博朋克的青色发光效果 */
+            width: 100%; height: 550px;
             border: 1px solid #00f3ff;
-            box-shadow: 0 0 15px rgba(0, 243, 255, 0.15);
-            border-radius: 8px;
-            overflow: hidden;
+            box-shadow: 0 0 20px rgba(0, 243, 255, 0.2);
+            border-radius: 12px; overflow: hidden; background-color: #0d1117;
         }
-        .card { 
-            background-color: #121826; 
-            border: 1px solid #1f2937;
+        .card { background-color: #121826; border: 1px solid #1f2937; border-radius: 10px; }
+        .card-header.bg-primary { background-color: #0d1117 !important; border-bottom: 1px solid #00f3ff; color: #00f3ff !important; font-weight: bold;}
+        .card-header.bg-light { background-color: #0d1117 !important; border-bottom: 1px solid #374151; color: #e5e7eb !important; }
+        .control-label { display: flex; justify-content: space-between; font-weight: bold; color: #a5b4fc; margin-bottom: 2px; font-size: 0.9rem;}
+        
+        input[type=range]::-webkit-slider-thumb { background: #00f3ff; box-shadow: 0 0 10px #00f3ff; }
+        .form-check-input:checked { background-color: #facc15; border-color: #facc15; box-shadow: 0 0 10px rgba(250, 204, 21, 0.6); }
+        
+        .result-box { font-size: 1.6rem; font-weight: bold; color: #00f3ff; text-shadow: 0 0 10px rgba(0, 243, 255, 0.5); }
+        .text-success { color: #39ff14 !important; text-shadow: 0 0 10px rgba(57, 255, 20, 0.5); }
+        .text-danger { color: #ff007f !important; text-shadow: 0 0 10px rgba(255, 0, 127, 0.5); }
+
+        #btn-animate {
+            border: 2px solid #39ff14; color: #39ff14; background: transparent;
+            transition: all 0.2s ease; font-weight: bold;
+            text-shadow: 0 0 5px rgba(57, 255, 20, 0.5);
+            box-shadow: 0 0 5px rgba(57, 255, 20, 0.2);
         }
-        .card-header.bg-primary {
-            background-color: #0d1117 !important;
-            border-bottom: 1px solid #00f3ff;
-            color: #00f3ff !important;
-        }
-        .card-header.bg-light {
-            background-color: #0d1117 !important;
-            border-bottom: 1px solid #374151;
-            color: #e5e7eb !important;
-        }
-        .control-label {
-            display: flex;
-            justify-content: space-between;
-            font-weight: bold;
-            color: #a5b4fc;
-        }
-        /* 滑块的强调色改为青色 */
-        input[type=range]::-webkit-slider-thumb {
-            background: #00f3ff;
-            box-shadow: 0 0 5px #00f3ff;
-        }
-        .result-box {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: #00f3ff;
-            text-shadow: 0 0 8px rgba(0, 243, 255, 0.4);
-        }
-        .text-success { color: #39ff14 !important; text-shadow: 0 0 8px rgba(57, 255, 20, 0.4); } /* 荧光绿 */
-        .text-danger { color: #ff007f !important; text-shadow: 0 0 8px rgba(255, 0, 127, 0.4); } /* 霓虹粉 */
+        #btn-animate:hover { background-color: rgba(57, 255, 20, 0.1); box-shadow: 0 0 15px rgba(57, 255, 20, 0.4); }
+        #btn-animate.active { background-color: #39ff14; color: #0a0e17; text-shadow: none; box-shadow: 0 0 20px #39ff14; }
+        
+        /* 底部说明区的高亮颜色 */
+        .highlight-E { color: #ff007f; font-weight: bold; }
+        .highlight-V0 { color: #00f3ff; font-weight: bold; }
+        .highlight-Prob { color: #facc15; font-weight: bold; }
     </style>
 </head>
 <body>
 
-<div class="container py-4">
-    <header class="pb-3 mb-4 border-bottom border-secondary">
-        <h1 class="display-6 fw-bold" style="color: #e5e7eb;">量子隧穿效应 <span style="color: #00f3ff; font-size: 0.6em;">(Quantum Tunneling)</span></h1>
-        <p style="color: #8b949e;">调节右侧参数，观察波函数如何“穿透”经典物理中无法逾越的势垒。</p>
+<div class="container-fluid px-4 py-3">
+    <header class="pb-2 mb-3 border-bottom border-secondary d-flex justify-content-between align-items-center">
+        <div>
+            <h1 class="h3 fw-bold mb-0" style="color: #e5e7eb;">量子隧穿效应<span style="color: #00f3ff; font-size: 0.8em; margin-left:10px;">动力学可视化实验室</span></h1>
+            <p class="text-muted mb-0 mt-1" style="font-size:0.9rem;">调节参数，开启左侧动画，观察波函数随时间的真实震荡与隧穿概率分布。</p>
+        </div>
+        <div class="alert alert-info py-1 px-3 mb-0" style="background-color: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.3); color: #38bdf8; font-size: 0.85rem; max-width: 400px;">
+            <strong>物理提示：</strong> 开启动画后，黄线（概率密度）保持静止，只有绿线（波函数）在震荡流动。这就是“定态”的特征。
+        </div>
     </header>
 
     <div class="row align-items-start">
-        <div class="col-lg-8 mb-4">
+        <div class="col-xl-8 col-lg-7 mb-3">
             <div id="plot-container"></div>
         </div>
 
-        <div class="col-lg-4">
-            <div class="card mb-4 shadow-sm">
+        <div class="col-xl-4 col-lg-5">
+            <div class="card mb-3 shadow">
                 <div class="card-header bg-primary">
-                    <h5 class="my-0">实时数据监测</h5>
+                    <h6 class="my-0">可视化控制面板</h6>
                 </div>
-                <div class="card-body text-center">
+                <div class="card-body d-flex justify-content-between align-items-center py-2">
+                    <button id="btn-animate" class="btn btn-sm px-4">
+                        <span class="spinner-grow spinner-grow-sm d-none" role="status" aria-hidden="true"></span>
+                        开启量子动力学动画
+                    </button>
+                    <div class="form-check form-switch mb-0">
+                        <input class="form-check-input" type="checkbox" role="switch" id="toggle-prob" checked>
+                        <label class="form-check-label text-warning fw-bold" for="toggle-prob" style="font-size:0.9rem; text-shadow: 0 0 5px rgba(250, 204, 21, 0.3);">
+                            显示概率密度 |ψ|²
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-3 shadow">
+                <div class="card-header bg-light">
+                    <h6 class="my-0 text-white-50">实时隧穿数据</h6>
+                </div>
+                <div class="card-body text-center py-3">
                     <div class="row">
                         <div class="col-6 border-end border-secondary">
-                            <h6 style="color: #8b949e;">透射率 (T)</h6>
+                            <h6 style="color: #8b949e; font-size:0.85rem;">透射率 (T) - 穿透概率</h6>
                             <div class="result-box" id="val-T">0.00%</div>
                         </div>
                         <div class="col-6">
-                            <h6 style="color: #8b949e;">反射率 (R)</h6>
+                            <h6 style="color: #8b949e; font-size:0.85rem;">反射率 (R) - 被弹回概率</h6>
                             <div class="result-box text-danger" id="val-R">100.00%</div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="card shadow-sm">
+            <div class="card shadow">
                 <div class="card-header bg-light">
-                    <h5 class="my-0">物理参数控制台</h5>
+                    <h6 class="my-0 text-white-50">物理参数调节 (汉密尔顿量)</h6>
                 </div>
-                <div class="card-body">
+                <div class="card-body py-3">
                     <div class="mb-3">
                         <div class="control-label">
-                            <label for="slider-E" class="form-label">粒子能量 (E)</label>
+                            <label for="slider-E">粒子能量 (E)</label>
                             <span id="display-E">5.0 eV</span>
                         </div>
-                        <input type="range" class="form-range" id="slider-E" min="0.1" max="15" step="0.1" value="5">
+                        <input type="range" class="form-range" id="slider-E" min="0.1" max="25" step="0.1" value="10">
                     </div>
                     <div class="mb-3">
                         <div class="control-label">
-                            <label for="slider-V0" class="form-label">势垒高度 (V<sub>0</sub>)</label>
+                            <label for="slider-V0">势垒高度 (V<sub>0</sub>)</label>
                             <span id="display-V0">10.0 eV</span>
                         </div>
-                        <input type="range" class="form-range" id="slider-V0" min="1" max="20" step="0.1" value="10">
+                        <input type="range" class="form-range" id="slider-V0" min="1" max="25" step="0.1" value="20">
                     </div>
                     <div class="mb-3">
                         <div class="control-label">
-                            <label for="slider-a" class="form-label">势垒宽度 (a)</label>
+                            <label for="slider-a">势垒宽度 (a)</label>
                             <span id="display-a">1.0 nm</span>
                         </div>
-                        <input type="range" class="form-range" id="slider-a" min="0.01" max="1" step="0.01" value="1">
+                        <input type="range" class="form-range" id="slider-a" min="0.01" max="1" step="0.01" value="0.5">
                     </div>
-                    <div class="mb-3">
+                    <div class="mb-2">
                         <div class="control-label">
-                            <label for="slider-m" class="form-label">粒子质量 (m)</label>
+                            <label for="slider-m">粒子质量 (m)</label>
                             <span id="display-m">1 m<sub>e</sub></span>
                         </div>
                         <input type="range" class="form-range" id="slider-m" min="0.1" max="5" step="0.1" value="1">
-                        <small style="color: #8b949e;">注：以电子质量(m<sub>e</sub>)为单位</small>
+                        <div class="text-end"><small class="text-muted" style="font-size:0.75rem;">(以电子质量m<sub>e</sub>为单位)</small></div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="row mt-4">
+    <div class="row mt-2 mb-4">
         <div class="col-12">
-            <div class="p-4 bg-dark rounded-3">
-                <h4>现象解释</h4>
-                <p>在经典力学中，如果一个滚动的球（粒子）的能量 E 小于前方山坡的高度 V<sub>0</sub>，它绝对无法翻过山坡，会被 100% 弹回（反射）。</p>
-                <p>但在量子力学中，微观粒子具有波粒二象性。粒子的波函数在遇到势垒时不会立刻降为零，而是以指数形式衰减。如果势垒不够宽，波函数就有机会“漏”到势垒的另一边。这就是<strong>量子隧穿效应</strong>。你可以尝试降低势垒宽度或增加粒子能量，看看透射率 T 会如何急剧变化。</p>
+            <div class="card shadow">
+                <div class="card-header bg-light">
+                    <h5 class="my-0 text-white-50">📖 现象解释与探索指南</h5>
+                </div>
+                <div class="card-body" style="color: #8b949e; line-height: 1.7;">
+                    <p><strong>经典物理的绝境：</strong>在经典力学中，如果一个滚动的球（粒子）的总能量 <span class="highlight-E">E</span> 小于前方山坡的高度 <span class="highlight-V0">V<sub>0</sub></span>，它绝对无法翻过山坡，必然会被 100% 弹回（反射）。</p>
+                    <p><strong>量子世界的奇迹：</strong>但在微观的量子力学中，粒子具有<strong>波粒二象性</strong>。你可以开启上方的“动力学动画”观察：粒子的波函数在遇到势垒时，并不会像撞到实体墙一样立刻消失，而是会在势垒内部以<strong>指数形式衰减</strong>。如果势垒不够宽或不够高，波函数就有机会“漏”到势垒的另一边，形成透射波。这就是著名的<strong>量子隧穿效应 (Quantum Tunneling)</strong>。</p>
+                    
+                    <hr style="border-color: #374151; margin: 1.5rem 0;">
+
+                </div>
             </div>
         </div>
     </div>
+
 </div>
 
 <script>
-    const sliderE = document.getElementById('slider-E');
-    const sliderV0 = document.getElementById('slider-V0');
-    const sliderA = document.getElementById('slider-a');
-    const sliderM = document.getElementById('slider-m');
-
-    const displayE = document.getElementById('display-E');
-    const displayV0 = document.getElementById('display-V0');
-    const displayA = document.getElementById('display-a');
-    const displayM = document.getElementById('display-m');
-
+    const sliders = { E: 'slider-E', V0: 'slider-V0', a: 'slider-a', m: 'slider-m' };
+    const displays = { E: 'display-E', V0: 'display-V0', a: 'display-a', m: 'display-m' };
+    Object.keys(sliders).forEach(k => { 
+        sliders[k] = document.getElementById(sliders[k]); 
+        displays[k] = document.getElementById(displays[k]); 
+    });
+    
+    const toggleProb = document.getElementById('toggle-prob');
+    const btnAnimate = document.getElementById('btn-animate');
     const valT = document.getElementById('val-T');
     const valR = document.getElementById('val-R');
 
-    const K = 5.124; 
+    const K_phys = 5.124; 
+    let animationId = null;
+    let isAnimating = false;
+    let time = 0;
+    const timeSpeed = 0.01; 
+    
+    let cachedWave = {
+        xValues: [], rePart: [], imPart: [], probDensity: [], baseLayout: {}
+    };
 
     const Complex = {
         add: (a, b) => ({ re: a.re + b.re, im: a.im + b.im }),
@@ -169,80 +192,64 @@
         scale: (c, s) => ({ re: c.re * s, im: c.im * s })
     };
 
-    function calculateTransmission(E, V0, a, m) {
+    function recalculatePhysicsAndCache() {
+        const E = parseFloat(sliders.E.value);
+        const V0 = parseFloat(sliders.V0.value);
+        const a = parseFloat(sliders.a.value);
+        const m = parseFloat(sliders.m.value);
+
+        let T;
         if (Math.abs(E - V0) < 0.001) {
-            const term = (m * V0 * Math.pow(a * K, 2)) / 4;
-            return 1 / (1 + term);
-        } 
-        if (E < V0) {
-            const kappa = K * Math.sqrt(m * (V0 - E));
+            const term = (m * V0 * Math.pow(a * K_phys, 2)) / 4;
+            T = 1 / (1 + term);
+        } else if (E < V0) {
+            const kappa = K_phys * Math.sqrt(m * (V0 - E));
             const sinhTerm = Math.sinh(kappa * a);
             const term = (Math.pow(V0, 2) * Math.pow(sinhTerm, 2)) / (4 * E * (V0 - E));
-            return 1 / (1 + term);
+            T = 1 / (1 + term);
         } else {
-            const k2 = K * Math.sqrt(m * (E - V0));
+            const k2 = K_phys * Math.sqrt(m * (E - V0));
             const sinTerm = Math.sin(k2 * a);
             const term = (Math.pow(V0, 2) * Math.pow(sinTerm, 2)) / (4 * E * (E - V0));
-            return 1 / (1 + term);
+            T = 1 / (1 + term);
         }
-    }
-
-    function updatePlotAndData() {
-        const E = parseFloat(sliderE.value);
-        const V0 = parseFloat(sliderV0.value);
-        const a = parseFloat(sliderA.value);
-        const m = parseFloat(sliderM.value);
-
-        const T = calculateTransmission(E, V0, a, m);
         const R = 1 - T;
         
         valT.innerText = (T * 100).toFixed(4) + '%';
         valR.innerText = (R * 100).toFixed(4) + '%';
         valT.className = T < 0.0001 ? "result-box" : "result-box text-success";
-        // 覆盖极小值颜色
         if(T < 0.0001) valT.style.color = "#6b7280"; else valT.style.color = "";
 
-        const xMin = -2;
-        const xMax = 5;
-        const step = 0.01;
-        const xWave = [];
-        const yWave = [];
+        const xMin = -2, xMax = 5, step = 0.01;
+        cachedWave.xValues = []; cachedWave.rePart = []; cachedWave.imPart = []; cachedWave.probDensity = [];
         
-        let calcE = E;
-        if (Math.abs(calcE - V0) < 0.001) calcE = V0 + 0.001;
-
-        const k1 = K * Math.sqrt(m * calcE);
+        let calcE = Math.abs(E - V0) < 0.001 ? V0 + 0.001 : E;
+        const k1 = K_phys * Math.sqrt(m * calcE);
         let r, t, A, B, C_c, D_c, kappa, k2;
 
         if (calcE < V0) {
-            kappa = K * Math.sqrt(m * (V0 - calcE));
+            kappa = K_phys * Math.sqrt(m * (V0 - calcE));
             const denom = { re: Math.cosh(kappa * a), im: ((k1*k1 - kappa*kappa) / (2 * k1 * kappa)) * Math.sinh(kappa * a) };
             t = Complex.div(Complex.exp(0, -k1 * a), denom);
-            const num_r = { re: 0, im: -((k1*k1 + kappa*kappa) / (2 * k1 * kappa)) * Math.sinh(kappa * a) };
-            r = Complex.div(num_r, denom);
+            r = Complex.div({ re: 0, im: -((k1*k1 + kappa*kappa) / (2 * k1 * kappa)) * Math.sinh(kappa * a) }, denom);
             const t_phase = Complex.mul(t, Complex.exp(0, k1 * a));
             A = Complex.mul(t_phase, { re: 0.5 * Math.exp(-kappa * a), im: 0.5 * Math.exp(-kappa * a) * (k1 / kappa) });
             B = Complex.mul(t_phase, { re: 0.5 * Math.exp(kappa * a), im: -0.5 * Math.exp(kappa * a) * (k1 / kappa) });
         } else {
-            k2 = K * Math.sqrt(m * (calcE - V0));
+            k2 = K_phys * Math.sqrt(m * (calcE - V0));
             const denom = { re: Math.cos(k2 * a), im: -((k1*k1 + k2*k2) / (2 * k1 * k2)) * Math.sin(k2 * a) };
             t = Complex.div(Complex.exp(0, -k1 * a), denom);
-            const num_r = { re: 0, im: ((k1*k1 - k2*k2) / (2 * k1 * k2)) * Math.sin(k2 * a) };
-            r = Complex.div(num_r, denom);
+            r = Complex.div({ re: 0, im: ((k1*k1 - k2*k2) / (2 * k1 * k2)) * Math.sin(k2 * a) }, denom);
             const t_phase = Complex.mul(t, Complex.exp(0, k1 * a));
             C_c = Complex.mul(t_phase, Complex.scale(Complex.exp(0, -k2 * a), 0.5 * (1 + k1 / k2)));
             D_c = Complex.mul(t_phase, Complex.scale(Complex.exp(0, k2 * a), 0.5 * (1 - k1 / k2)));
         }
 
-        const waveScale = 1.5; 
-
         for (let x = xMin; x <= xMax; x += step) {
-            xWave.push(x);
+            cachedWave.xValues.push(x);
             let psi = { re: 0, im: 0 };
             if (x < 0) {
-                const inc = Complex.exp(0, k1 * x);
-                const ref = Complex.mul(r, Complex.exp(0, -k1 * x));
-                psi = Complex.add(inc, ref);
+                psi = Complex.add(Complex.exp(0, k1 * x), Complex.mul(r, Complex.exp(0, -k1 * x)));
             } else if (x <= a) {
                 if (calcE < V0) {
                     psi = Complex.add(Complex.scale(A, Math.exp(kappa * x)), Complex.scale(B, Math.exp(-kappa * x)));
@@ -252,73 +259,105 @@
             } else {
                 psi = Complex.mul(t, Complex.exp(0, k1 * x));
             }
-            yWave.push(E + waveScale * psi.re);
+            cachedWave.rePart.push(psi.re);
+            cachedWave.imPart.push(psi.im);
+            cachedWave.probDensity.push(psi.re * psi.re + psi.im * psi.im);
         }
 
-        const xBarrier = [xMin, 0, 0, a, a, xMax];
-        const yBarrier = [0, 0, V0, V0, 0, 0];
-
-        // 修改1：势垒颜色变为半透明青色发光
-        const traceBarrier = {
-            x: xBarrier, y: yBarrier, type: 'scatter', mode: 'lines',
-            name: '势垒 (V₀)', 
-            line: { color: '#00f3ff', width: 2 }, 
-            fill: 'tozeroy', 
-            fillcolor: 'rgba(0, 243, 255, 0.1)', 
-            hoverinfo: 'none'
+        cachedWave.traceBarrier = {
+            x: [xMin, 0, 0, a, a, xMax], y: [0, 0, V0, V0, 0, 0], 
+            type: 'scatter', mode: 'lines', name: '势垒 (V₀)', 
+            line: { color: '#00f3ff', width: 2.5 }, fill: 'tozeroy', fillcolor: 'rgba(0, 243, 255, 0.15)', hoverinfo: 'none'
         };
 
-        // 修改2：能量线变为霓虹粉色
-        const traceEnergy = {
+        cachedWave.traceEnergy = {
             x: [xMin, xMax], y: [E, E], type: 'scatter', mode: 'lines',
-            name: '粒子能量 (E)', 
-            line: { color: '#ff007f', width: 2, dash: 'dash' },
-            hoverinfo: 'y+name'
+            name: '粒子能量 (E)', line: { color: '#ff007f', width: 2, dash: 'dash' }, hoverinfo: 'none'
         };
 
-        // 修改3：波函数变为高亮荧光绿
+        cachedWave.baseLayout = {
+            paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)',
+            xaxis: { title: '位置 x (nm)', range: [xMin, xMax], zeroline: false, gridcolor: 'rgba(255,255,255,0.03)', titlefont: { color: '#8b949e' }, tickfont: { color: '#8b949e' } },
+            yaxis: { title: '能量 / 波幅 / 概率 (eV)', range: [-3, 25], zeroline: true, zerolinecolor: 'rgba(255,255,255,0.1)', gridcolor: 'rgba(255,255,255,0.03)', titlefont: { color: '#8b949e' }, tickfont: { color: '#8b949e' } },
+            margin: { l: 60, r: 30, t: 30, b: 50 }, showlegend: true, 
+            legend: { x: 0.02, y: 0.98, font: { color: '#c9d1d9', size: 11 }, bgcolor: 'rgba(10, 14, 23, 0.8)', bordercolor: 'rgba(255,255,255,0.1)', borderwidth: 1 }, hovermode: 'closest'
+        };
+
+        renderAnimationFrame();
+    }
+
+    function renderAnimationFrame() {
+        const E_param = parseFloat(sliders.E.value);
+        const phase = -time; 
+
+        const animatingRePart = [];
+        const animatingProbDensity = [];
+        
+        for (let i = 0; i < cachedWave.xValues.length; i++) {
+            const u = cachedWave.rePart[i];
+            const v = cachedWave.imPart[i];
+            
+            const oscillatngRe = u * Math.cos(phase) - v * Math.sin(phase);
+            animatingRePart.push(E_param + 2.5 * oscillatngRe); 
+            animatingProbDensity.push(E_param + 1.0 * cachedWave.probDensity[i]);
+        }
+
+        const traceProb = {
+            x: cachedWave.xValues, y: animatingProbDensity, type: 'scatter', mode: 'lines',
+            name: '概率密度 |Ψ|² (定态)', line: { color: '#facc15', width: 3 }, hoverinfo: 'none',
+            visible: toggleProb.checked
+        };
+
         const traceWave = {
-            x: xWave, y: yWave, type: 'scatter', mode: 'lines',
-            name: '波函数实部 Re(ψ)', 
-            line: { color: '#39ff14', width: 2.5 },
-            hoverinfo: 'none'
+            x: cachedWave.xValues, y: animatingRePart, type: 'scatter', mode: 'lines',
+            name: 'Re(Ψ(x,t))', line: { color: '#39ff14', width: 2 }, hoverinfo: 'none'
         };
 
-        // 修改4：图表背景彻底暗黑化，调整网格线颜色
-        const layout = {
-            paper_bgcolor: 'rgba(0,0,0,0)', // 透明，继承外层容器颜色
-            plot_bgcolor: '#0a0e17',       // 绘图区深色背景
-            xaxis: { 
-                title: '位置 x (nm)', range: [xMin, xMax], zeroline: false,
-                gridcolor: 'rgba(255,255,255,0.05)', titlefont: { color: '#8b949e' }, tickfont: { color: '#8b949e' }
-            },
-            yaxis: { 
-                title: '能量与波幅 (eV)', range: [-2, 25], zeroline: true, zerolinecolor: 'rgba(255,255,255,0.1)',
-                gridcolor: 'rgba(255,255,255,0.05)', titlefont: { color: '#8b949e' }, tickfont: { color: '#8b949e' }
-            },
-            margin: { l: 60, r: 30, t: 30, b: 50 },
-            showlegend: true, 
-            legend: { x: 0.05, y: 0.95, font: { color: '#c9d1d9' }, bgcolor: 'rgba(10, 14, 23, 0.8)' }, 
-            hovermode: 'closest'
-        };
-
-        Plotly.react('plot-container', [traceBarrier, traceEnergy, traceWave], layout);
+        Plotly.react('plot-container', [
+            cachedWave.traceBarrier, 
+            cachedWave.traceEnergy, 
+            traceProb, 
+            traceWave
+        ], cachedWave.baseLayout);
     }
 
-    function handleSliderChange() {
-        displayE.innerText = sliderE.value + ' eV';
-        displayV0.innerText = sliderV0.value + ' eV';
-        displayA.innerText = sliderA.value + ' nm';
-        displayM.innerText = sliderM.value + ' m_e';
-        updatePlotAndData();
+    function animationLoop() {
+        if (!isAnimating) return;
+        
+        const E_val = parseFloat(sliders.E.value);
+        time += timeSpeed * (1 + E_val * 0.1); 
+        
+        renderAnimationFrame();
+        animationId = requestAnimationFrame(animationLoop);
     }
 
-    sliderE.addEventListener('input', handleSliderChange);
-    sliderV0.addEventListener('input', handleSliderChange);
-    sliderA.addEventListener('input', handleSliderChange);
-    sliderM.addEventListener('input', handleSliderChange);
+    function handleParamChange() {
+        Object.keys(displays).forEach(k => { 
+            displays[k].innerHTML = sliders[k].value + (k==='m'?' m<sub>e</sub>':(k==='a'?' nm':' eV')); 
+        });
+        recalculatePhysicsAndCache();
+    }
 
-    updatePlotAndData();
+    Object.values(sliders).forEach(s => s.addEventListener('input', handleParamChange));
+    toggleProb.addEventListener('change', renderAnimationFrame); 
+
+    btnAnimate.addEventListener('click', () => {
+        isAnimating = !isAnimating;
+        
+        if (isAnimating) {
+            btnAnimate.classList.add('active');
+            btnAnimate.innerHTML = '<span class="spinner-grow spinner-grow-sm" role="status"></span> 停止量子动力学动画';
+            animationLoop();
+        } else {
+            btnAnimate.classList.remove('active');
+            btnAnimate.innerText = '开启量子动力学动画';
+            if (animationId) cancelAnimationFrame(animationId);
+            time = 0; 
+            renderAnimationFrame(); 
+        }
+    });
+
+    handleParamChange();
 </script>
 </body>
 </html>
