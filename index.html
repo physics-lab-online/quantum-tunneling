@@ -2,24 +2,31 @@
 <html lang="zh-CN" data-bs-theme="dark">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>一维量子隧穿效应动力学可视化</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
     <style>
-        body { background-color: #0a0e17; color: #c9d1d9; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
+        body { background-color: #0a0e17; color: #c9d1d9; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; overflow-x: hidden; }
+        
+        /* 图表容器默认高度（电脑端） */
         #plot-container {
             width: 100%; height: 550px;
             border: 1px solid #00f3ff;
             box-shadow: 0 0 20px rgba(0, 243, 255, 0.2);
             border-radius: 12px; overflow: hidden; background-color: #0d1117;
         }
+        
         .card { background-color: #121826; border: 1px solid #1f2937; border-radius: 10px; }
         .card-header.bg-primary { background-color: #0d1117 !important; border-bottom: 1px solid #00f3ff; color: #00f3ff !important; font-weight: bold;}
         .card-header.bg-light { background-color: #0d1117 !important; border-bottom: 1px solid #374151; color: #e5e7eb !important; }
         .control-label { display: flex; justify-content: space-between; font-weight: bold; color: #a5b4fc; margin-bottom: 2px; font-size: 0.9rem;}
         
-        input[type=range]::-webkit-slider-thumb { background: #00f3ff; box-shadow: 0 0 10px #00f3ff; }
+        /* 放大滑块触控点，适配手机粗手指 */
+        input[type=range]::-webkit-slider-thumb { 
+            background: #00f3ff; box-shadow: 0 0 10px #00f3ff; 
+            width: 18px; height: 18px; 
+        }
         .form-check-input:checked { background-color: #facc15; border-color: #facc15; box-shadow: 0 0 10px rgba(250, 204, 21, 0.6); }
         
         .result-box { font-size: 1.6rem; font-weight: bold; color: #00f3ff; text-shadow: 0 0 10px rgba(0, 243, 255, 0.5); }
@@ -35,27 +42,53 @@
         #btn-animate:hover { background-color: rgba(57, 255, 20, 0.1); box-shadow: 0 0 15px rgba(57, 255, 20, 0.4); }
         #btn-animate.active { background-color: #39ff14; color: #0a0e17; text-shadow: none; box-shadow: 0 0 20px #39ff14; }
         
-        /* 底部说明区的高亮颜色 */
         .highlight-E { color: #ff007f; font-weight: bold; }
         .highlight-V0 { color: #00f3ff; font-weight: bold; }
         .highlight-Prob { color: #facc15; font-weight: bold; }
+
+        /* ======== 核心手机端适配逻辑 ======== */
+        @media (max-width: 991px) {
+            /* 1. 图表吸顶：滑动下方参数时，图表固定在屏幕上方 */
+            .sticky-mobile {
+                position: -webkit-sticky;
+                position: sticky;
+                top: 0;
+                z-index: 1020;
+                background-color: #0a0e17; /* 防止透明背景文字重叠 */
+                padding-top: 10px;
+                padding-bottom: 10px;
+                margin-bottom: 10px !important;
+                border-bottom: 1px solid #1f2937;
+            }
+            /* 2. 缩小图表高度，给下方滑块留出操作空间 */
+            #plot-container {
+                height: 320px;
+                border-radius: 8px;
+            }
+            /* 3. 紧凑型排版：减小标题和卡片的间距 */
+            header h1 { font-size: 1.3rem !important; }
+            header p { font-size: 0.8rem !important; }
+            .result-box { font-size: 1.3rem; }
+            .container-fluid { padding-left: 10px; padding-right: 10px; }
+            .card-body { padding: 12px; }
+        }
     </style>
 </head>
 <body>
 
 <div class="container-fluid px-4 py-3">
-    <header class="pb-2 mb-3 border-bottom border-secondary d-flex justify-content-between align-items-center">
-        <div>
-            <h1 class="h3 fw-bold mb-0" style="color: #e5e7eb;">量子隧穿效应<span style="color: #00f3ff; font-size: 0.8em; margin-left:10px;">动力学可视化实验室</span></h1>
-            <p class="text-muted mb-0 mt-1" style="font-size:0.9rem;">调节参数，开启左侧动画，观察波函数随时间的真实震荡与隧穿概率分布。</p>
+    <header class="pb-2 mb-3 border-bottom border-secondary d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center">
+        <div class="mb-2 mb-md-0">
+            <h1 class="h3 fw-bold mb-0" style="color: #e5e7eb;">量子隧穿效应<span style="color: #00f3ff; font-size: 0.8em; margin-left:10px;">动力学可视化</span></h1>
+            <p class="text-muted mb-0 mt-1" style="font-size:0.9rem;">调节下方参数，观察波函数随时间的震荡与隧穿概率。</p>
         </div>
-        <div class="alert alert-info py-1 px-3 mb-0" style="background-color: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.3); color: #38bdf8; font-size: 0.85rem; max-width: 400px;">
-            <strong>物理提示：</strong> 开启动画后，黄线（概率密度）保持静止，只有绿线（波函数）在震荡流动。这就是“定态”的特征。
+        <div class="alert alert-info py-1 px-2 mb-0" style="background-color: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.3); color: #38bdf8; font-size: 0.8rem; max-width: 100%;">
+            <strong>提示：</strong> 开启动画后，黄线(概率)静止，绿线(波函数)震荡。
         </div>
     </header>
 
     <div class="row align-items-start">
-        <div class="col-xl-8 col-lg-7 mb-3">
+        <div class="col-xl-8 col-lg-7 mb-3 sticky-mobile">
             <div id="plot-container"></div>
         </div>
 
@@ -64,39 +97,36 @@
                 <div class="card-header bg-primary">
                     <h6 class="my-0">可视化控制面板</h6>
                 </div>
-                <div class="card-body d-flex justify-content-between align-items-center py-2">
-                    <button id="btn-animate" class="btn btn-sm px-4">
+                <div class="card-body d-flex flex-wrap justify-content-between align-items-center py-2 gap-2">
+                    <button id="btn-animate" class="btn btn-sm px-3 flex-grow-1">
                         <span class="spinner-grow spinner-grow-sm d-none" role="status" aria-hidden="true"></span>
-                        开启量子动力学动画
+                        开启量子动画
                     </button>
-                    <div class="form-check form-switch mb-0">
+                    <div class="form-check form-switch mb-0 ms-2">
                         <input class="form-check-input" type="checkbox" role="switch" id="toggle-prob" checked>
-                        <label class="form-check-label text-warning fw-bold" for="toggle-prob" style="font-size:0.9rem; text-shadow: 0 0 5px rgba(250, 204, 21, 0.3);">
-                            显示概率密度 |ψ|²
+                        <label class="form-check-label text-warning fw-bold" for="toggle-prob" style="font-size:0.85rem; text-shadow: 0 0 5px rgba(250, 204, 21, 0.3);">
+                            显示 |ψ|²
                         </label>
                     </div>
                 </div>
             </div>
 
             <div class="card mb-3 shadow">
-                <div class="card-header bg-light">
-                    <h6 class="my-0 text-white-50">实时隧穿数据</h6>
-                </div>
-                <div class="card-body text-center py-3">
+                <div class="card-body text-center py-2">
                     <div class="row">
                         <div class="col-6 border-end border-secondary">
-                            <h6 style="color: #8b949e; font-size:0.85rem;">透射率 (T) - 穿透概率</h6>
+                            <h6 style="color: #8b949e; font-size:0.8rem; margin-bottom: 2px;">透射率 (穿透)</h6>
                             <div class="result-box" id="val-T">0.00%</div>
                         </div>
                         <div class="col-6">
-                            <h6 style="color: #8b949e; font-size:0.85rem;">反射率 (R) - 被弹回概率</h6>
+                            <h6 style="color: #8b949e; font-size:0.8rem; margin-bottom: 2px;">反射率 (弹回)</h6>
                             <div class="result-box text-danger" id="val-R">100.00%</div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="card shadow">
+            <div class="card shadow mb-3">
                 <div class="card-header bg-light">
                     <h6 class="my-0 text-white-50">物理参数调节 (汉密尔顿量)</h6>
                 </div>
@@ -122,36 +152,28 @@
                         </div>
                         <input type="range" class="form-range" id="slider-a" min="0.01" max="1" step="0.01" value="0.5">
                     </div>
-                    <div class="mb-2">
+                    <div class="mb-1">
                         <div class="control-label">
                             <label for="slider-m">粒子质量 (m)</label>
                             <span id="display-m">1 m<sub>e</sub></span>
                         </div>
                         <input type="range" class="form-range" id="slider-m" min="0.1" max="5" step="0.1" value="1">
-                        <div class="text-end"><small class="text-muted" style="font-size:0.75rem;">(以电子质量m<sub>e</sub>为单位)</small></div>
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
 
-    <div class="row mt-2 mb-4">
-        <div class="col-12">
-            <div class="card shadow">
+            <div class="card shadow mb-4">
                 <div class="card-header bg-light">
-                    <h5 class="my-0 text-white-50">📖 现象解释与探索指南</h5>
+                    <h6 class="my-0 text-white-50">📖 探索指南</h6>
                 </div>
-                <div class="card-body" style="color: #8b949e; line-height: 1.7;">
-                    <p><strong>经典物理的绝境：</strong>在经典力学中，如果一个滚动的球（粒子）的总能量 <span class="highlight-E">E</span> 小于前方山坡的高度 <span class="highlight-V0">V<sub>0</sub></span>，它绝对无法翻过山坡，必然会被 100% 弹回（反射）。</p>
-                    <p><strong>量子世界的奇迹：</strong>但在微观的量子力学中，粒子具有<strong>波粒二象性</strong>。你可以开启上方的“动力学动画”观察：粒子的波函数在遇到势垒时，并不会像撞到实体墙一样立刻消失，而是会在势垒内部以<strong>指数形式衰减</strong>。如果势垒不够宽或不够高，波函数就有机会“漏”到势垒的另一边，形成透射波。这就是著名的<strong>量子隧穿效应 (Quantum Tunneling)</strong>。</p>
-                    
-                    <hr style="border-color: #374151; margin: 1.5rem 0;">
-
+                <div class="card-body" style="color: #8b949e; line-height: 1.6; font-size: 0.85rem;">
+                    <p class="mb-2"><strong>经典物理：</strong>能量 <span class="highlight-E">E</span> 小于高度 <span class="highlight-V0">V<sub>0</sub></span> 的粒子会被 100% 弹回。</p>
+                    <p class="mb-3"><strong>量子隧穿：</strong>微观粒子的波函数在势垒内呈指数衰减。只要势垒够薄，就有概率“穿墙”过去。</p>
                 </div>
             </div>
+            
         </div>
     </div>
-
 </div>
 
 <script>
@@ -275,12 +297,16 @@
             name: '粒子能量 (E)', line: { color: '#ff007f', width: 2, dash: 'dash' }, hoverinfo: 'none'
         };
 
+        // 动态判断屏幕宽度，决定图表的边距（手机端边距更小，节省空间）
+        const isMobile = window.innerWidth <= 991;
+        const marginSettings = isMobile ? { l: 45, r: 15, t: 25, b: 35 } : { l: 60, r: 30, t: 30, b: 50 };
+
         cachedWave.baseLayout = {
             paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)',
-            xaxis: { title: '位置 x (nm)', range: [xMin, xMax], zeroline: false, gridcolor: 'rgba(255,255,255,0.03)', titlefont: { color: '#8b949e' }, tickfont: { color: '#8b949e' } },
-            yaxis: { title: '能量 / 波幅 / 概率 (eV)', range: [-3, 25], zeroline: true, zerolinecolor: 'rgba(255,255,255,0.1)', gridcolor: 'rgba(255,255,255,0.03)', titlefont: { color: '#8b949e' }, tickfont: { color: '#8b949e' } },
-            margin: { l: 60, r: 30, t: 30, b: 50 }, showlegend: true, 
-            legend: { x: 0.02, y: 0.98, font: { color: '#c9d1d9', size: 11 }, bgcolor: 'rgba(10, 14, 23, 0.8)', bordercolor: 'rgba(255,255,255,0.1)', borderwidth: 1 }, hovermode: 'closest'
+            xaxis: { title: '位置 x (nm)', range: [xMin, xMax], zeroline: false, gridcolor: 'rgba(255,255,255,0.03)', titlefont: { color: '#8b949e', size: isMobile?10:12 }, tickfont: { color: '#8b949e', size: isMobile?10:12 } },
+            yaxis: { title: isMobile ? '能量/概率' : '能量 / 波幅 / 概率 (eV)', range: [-5, 25], zeroline: true, zerolinecolor: 'rgba(255,255,255,0.1)', gridcolor: 'rgba(255,255,255,0.03)', titlefont: { color: '#8b949e', size: isMobile?10:12 }, tickfont: { color: '#8b949e', size: isMobile?10:12 } },
+            margin: marginSettings, showlegend: true, 
+            legend: { x: 0.02, y: 0.98, font: { color: '#c9d1d9', size: isMobile?9:11 }, bgcolor: 'rgba(10, 14, 23, 0.8)', bordercolor: 'rgba(255,255,255,0.1)', borderwidth: 1 }, hovermode: 'closest'
         };
 
         renderAnimationFrame();
@@ -299,18 +325,18 @@
             
             const oscillatngRe = u * Math.cos(phase) - v * Math.sin(phase);
             animatingRePart.push(E_param + 2.5 * oscillatngRe); 
-            animatingProbDensity.push(E_param + 1.0 * cachedWave.probDensity[i]);
+            animatingProbDensity.push(E_param + 0.5 + 1.0 * cachedWave.probDensity[i]);
         }
 
         const traceProb = {
             x: cachedWave.xValues, y: animatingProbDensity, type: 'scatter', mode: 'lines',
-            name: '概率密度 |Ψ|² (定态)', line: { color: '#facc15', width: 3 }, hoverinfo: 'none',
+            name: '概率密度 |Ψ|²', line: { color: '#facc15', width: window.innerWidth<=991?2:3 }, hoverinfo: 'none',
             visible: toggleProb.checked
         };
 
         const traceWave = {
             x: cachedWave.xValues, y: animatingRePart, type: 'scatter', mode: 'lines',
-            name: 'Re(Ψ(x,t))', line: { color: '#39ff14', width: 2 }, hoverinfo: 'none'
+            name: 'Re(Ψ(x,t))', line: { color: '#39ff14', width: window.innerWidth<=991?1.5:2.5 }, hoverinfo: 'none'
         };
 
         Plotly.react('plot-container', [
@@ -346,15 +372,21 @@
         
         if (isAnimating) {
             btnAnimate.classList.add('active');
-            btnAnimate.innerHTML = '<span class="spinner-grow spinner-grow-sm" role="status"></span> 停止量子动力学动画';
+            btnAnimate.innerHTML = '<span class="spinner-grow spinner-grow-sm" role="status"></span> 停止动画';
             animationLoop();
         } else {
             btnAnimate.classList.remove('active');
-            btnAnimate.innerText = '开启量子动力学动画';
+            btnAnimate.innerText = '开启量子动画';
             if (animationId) cancelAnimationFrame(animationId);
             time = 0; 
             renderAnimationFrame(); 
         }
+    });
+
+    // 监听窗口大小变化，自动调整 Plotly 图表尺寸
+    window.addEventListener('resize', () => {
+        Plotly.Plots.resize('plot-container');
+        recalculatePhysicsAndCache(); // 重新计算以应用手机/电脑不同的边距
     });
 
     handleParamChange();
