@@ -306,7 +306,7 @@
             xaxis: { title: '位置 x (nm)', range: [xMin, xMax], zeroline: false, gridcolor: 'rgba(255,255,255,0.03)', titlefont: { color: '#8b949e', size: isMobile?10:12 }, tickfont: { color: '#8b949e', size: isMobile?10:12 } },
             yaxis: { title: isMobile ? '能量/概率' : '能量 / 波幅 / 概率 (eV)', range: [-5, 25], zeroline: true, zerolinecolor: 'rgba(255,255,255,0.1)', gridcolor: 'rgba(255,255,255,0.03)', titlefont: { color: '#8b949e', size: isMobile?10:12 }, tickfont: { color: '#8b949e', size: isMobile?10:12 } },
             margin: marginSettings, showlegend: true, 
-            legend: { x: 0.02, y: 0.98, font: { color: '#c9d1d9', size: isMobile?9:11 }, bgcolor: 'rgba(10, 14, 23, 0.8)', bordercolor: 'rgba(255,255,255,0.1)', borderwidth: 1 }, hovermode: 'closest'
+            legend: { x: 0.98, y: 0.98, xanchor: 'right', font: { color: '#c9d1d9', size: isMobile?9:11 }, bgcolor: 'rgba(10, 14, 23, 0.8)', bordercolor: 'rgba(255,255,255,0.1)', borderwidth: 1 }, hovermode: 'closest'
         };
 
         renderAnimationFrame();
